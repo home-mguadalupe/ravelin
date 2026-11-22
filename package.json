@@ -1,5 +1,5 @@
 {
-  "name": "fortigate-backup",
+  "name": "ravelin",
   "version": "0.1.0",
   "description": "Simple web UI to back up FortiGate configurations via REST API key",
   "main": "server.js",

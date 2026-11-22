@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-22 — Renamed to Ravelin
+
+- The app was called "FortiGate Backup" in the interface, which named only one of its features.
+  It is now **Ravelin** (a fortification that guards a fort's gate): page titles, header, login,
+  setup, the compliance report footer, the server's start-up line, `package.json` and the
+  User-Agent sent to NVD.
+- Unchanged, so existing installs keep working: the Postgres database, user and password
+  (`fortiinv`) in `docker-compose.yml` and `DATABASE_URL`.
+
 ## 2026-11-22 — Side menu
 
 ### Changed: navigation moves into a hamburger menu

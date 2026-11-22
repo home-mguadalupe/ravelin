@@ -1,4 +1,4 @@
-// FortiGate backup web UI - zero dependencies, run with `node server.js`.
+// Ravelin: FortiGate fleet backups, inventory and security web UI - zero dependencies, run with `node server.js`.
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -639,7 +639,7 @@ firewalls
         handle(req, res).catch((err) => send(res, 400, { error: err.message }))
       )
       .listen(PORT, BIND, () => {
-        console.log(`FortiGate backup UI on http://${BIND}:${PORT} (firewalls stored in ${firewalls.backend}, `
+        console.log(`Ravelin on http://${BIND}:${PORT} (firewalls stored in ${firewalls.backend}, `
           + `config push ${PUSH_ENABLED ? 'ENABLED' : 'disabled - set ENABLE_PUSH=1 to enable'})`);
         jobs.start();
         const a = jobs.status();

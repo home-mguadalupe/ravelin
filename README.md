@@ -1,6 +1,9 @@
-# FortiGate Backup
+# Ravelin
 
-A small self-hosted web UI that backs up FortiGate configurations over the REST API,
+*A ravelin is the outwork built in front of a fort's gate to protect it.* Ravelin is a small
+self-hosted web UI for a fleet of FortiGate firewalls. It is not affiliated with Fortinet.
+
+It backs up FortiGate configurations over the REST API,
 searches inside the backup files, and (optionally) loads them into a PostgreSQL
 inventory of interfaces, firewall policies, address and service objects and groups, IPsec
 tunnels, VIPs, IP pools, SSL-VPN settings and policy routes, with a cross-reference

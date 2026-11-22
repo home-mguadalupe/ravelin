@@ -2,7 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "claumon-dev",
+      "name": "ravelin-dev",
       "runtimeExecutable": "env",
       "runtimeArgs": [
         "DATABASE_URL=postgres://fortiinv:fortiinv@127.0.0.1:5432/fortiinv",
@@ -14,7 +14,7 @@
       "port": 5555
     },
     {
-      "name": "claumon-uitest",
+      "name": "ravelin-uitest",
       "runtimeExecutable": "env",
       "runtimeArgs": [
         "DATABASE_URL=postgres://fortiinv:fortiinv@127.0.0.1:5432/fortiinv",
