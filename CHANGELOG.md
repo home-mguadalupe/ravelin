@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-22 — Side menu
+
+### Changed: navigation moves into a hamburger menu
+- The row of twelve tabs in the header is replaced by a ☰ button that opens a side menu.
+  The views are grouped there under Devices, Look up, Assess and Administration (admins only),
+  with the same counts as before.
+- The header now shows only the menu button, the app name, the current view and the theme toggle.
+- Your name and role, **Change password** and **Log out** moved to the foot of the menu.
+- The menu is a modal: Esc, clicking outside or picking a view closes it.
+
 ## 2026-11-22 — User accounts
 
 ### New: user accounts and roles

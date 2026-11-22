@@ -44,26 +44,35 @@
   .skip { position:absolute; left:12px; top:-60px; z-index:10; padding:8px 14px; border-radius:var(--radius-sm); background:var(--surface); color:var(--fg); box-shadow:var(--overlay); }
   .skip:focus { top:10px; }
 
-  /* ---------- header ---------- */
-  header { padding:0 24px; display:flex; flex-wrap:wrap; align-items:center; gap:0 24px; border-bottom:1px solid var(--line); }
-  header .brand { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:650; letter-spacing:-.01em; padding:12px 0; white-space:nowrap; }
-  header .brand svg { width:20px; height:20px; flex:none; }
-  header nav { display:flex; overflow-x:auto; scrollbar-width:none; margin-bottom:-1px; }
-  header nav a { display:flex; align-items:baseline; gap:6px; color:var(--muted); text-decoration:none; padding:14px 10px 12px; border-bottom:2px solid transparent; white-space:nowrap; font-size:13.5px; transition:color .12s; }
-  header nav a:hover { color:var(--fg); }
-  header nav a[aria-current="page"] { color:var(--fg); border-bottom-color:var(--fg); font-weight:600; }
-  header nav a:focus-visible { outline-offset:-4px; border-radius:6px; }
-  /* The tabs fall into four jobs: devices, look things up, assess, change. */
-  header nav a.grp { margin-left:17px; position:relative; }
-  header nav a.grp::before { content:""; position:absolute; left:-9px; top:16px; bottom:13px; width:1px; background:var(--line-strong); }
-  header nav .count { color:var(--muted); font-size:11.5px; font-weight:500; font-variant-numeric:tabular-nums; }
-  .theme-btn { margin-left:auto; width:32px; padding:0; border-color:transparent; background:transparent; color:var(--muted); }
-  .theme-btn:hover { color:var(--fg); }
-  .logout-btn { margin-left:-20px; width:32px; padding:0; border-color:transparent; background:transparent; color:var(--muted); }
-  .logout-btn:hover { color:var(--fg); }
-  .account-btn { margin-left:-20px; width:32px; padding:0; border-color:transparent; background:transparent; color:var(--muted); }
-  .account-btn:hover { color:var(--fg); }
-  .account-btn svg { width:16px; height:16px; }
+  /* ---------- header + side menu ---------- */
+  header { padding:0 16px; height:52px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--line); }
+  header .brand, .sidemenu .brand { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:650; letter-spacing:-.01em; white-space:nowrap; }
+  header .brand svg, .sidemenu .brand svg { width:20px; height:20px; flex:none; }
+  header .crumb { color:var(--muted); font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+  header .crumb::before { content:"/"; margin-right:10px; color:var(--line-strong); }
+  .menu-btn, .theme-btn, .icon-btn { width:34px; padding:0; border-color:transparent; background:transparent; color:var(--muted); flex:none; }
+  .menu-btn:hover, .theme-btn:hover, .icon-btn:hover { color:var(--fg); }
+  .menu-btn { margin-left:-6px; color:var(--fg); }
+  .menu-btn svg, .icon-btn svg { width:20px; height:20px; }
+  .theme-btn { margin-left:auto; }
+
+  dialog.sidemenu { position:fixed; inset:0 auto 0 0; margin:0; width:min(280px, 86vw); max-width:none; height:100dvh; max-height:none; padding:0; border:none; border-right:1px solid var(--line);
+    background:var(--surface); color:var(--fg); box-shadow:var(--overlay); display:flex; flex-direction:column; transform:translateX(-100%);
+    transition:transform .18s ease-out, overlay .18s allow-discrete, display .18s allow-discrete; }
+  dialog.sidemenu:not([open]) { display:none; }
+  dialog.sidemenu[open] { transform:none; }
+  @starting-style { dialog.sidemenu[open] { transform:translateX(-100%); } }
+  .sidemenu-head { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 10px 9px 18px; border-bottom:1px solid var(--line); }
+  .sidemenu nav { flex:1; overflow-y:auto; padding:8px 10px 16px; display:flex; flex-direction:column; }
+  .sidemenu nav h3 { margin:16px 10px 4px; font-size:11.5px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); }
+  .sidemenu nav a { display:flex; align-items:baseline; justify-content:space-between; gap:8px; padding:7px 10px; border-radius:var(--radius-sm); color:var(--fg); text-decoration:none; font-size:14px; }
+  .sidemenu nav a:hover { background:var(--surface-2); }
+  .sidemenu nav a[aria-current="page"] { background:var(--accent-soft); font-weight:600; }
+  .sidemenu nav .count { color:var(--muted); font-size:12px; font-weight:500; font-variant-numeric:tabular-nums; }
+  .sidemenu-foot { border-top:1px solid var(--line); padding:12px 18px 16px; display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+  .sidemenu-foot .who { flex:1 1 100%; display:grid; font-size:13px; min-width:0; }
+  .sidemenu-foot .who strong { overflow:hidden; text-overflow:ellipsis; }
+  .sidemenu-foot .who span { color:var(--muted); font-size:12px; }
   .theme-btn .sun, :root[data-theme="dark"] .theme-btn .moon { display:none; }
   /* What only an admin can use; the server refuses it for read-only accounts anyway. */
   body[data-role="viewer"] .admin-only { display:none !important; }
@@ -328,17 +337,17 @@
   .emptystate button { margin-top:14px; }
   .invnote { padding:8px 2px 0; font-size:12px; color:var(--muted); display:flex; flex-wrap:wrap; gap:4px 14px; }
   .invnote:empty { display:none; }
-  .drawer-head .tools { display:flex; gap:4px; flex:none; }
+  .sidemenu-head .tools { display:flex; gap:4px; flex:none; }
   .copied { color:var(--ok) !important; }
 
   /* ---------- detail drawer ---------- */
   .drawer { position:fixed; top:0; right:0; bottom:0; z-index:20; width:min(560px, 100vw); display:flex; flex-direction:column; background:var(--surface); box-shadow:var(--overlay); animation:slide-in .16s ease-out; }
   .drawer[hidden] { display:none; }
   @keyframes slide-in { from { transform:translateX(16px); opacity:0; } }
-  .drawer-head { display:flex; gap:12px; align-items:flex-start; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--line); }
-  .drawer-head .eyebrow { font-size:12px; font-weight:500; color:var(--muted); }
-  .drawer-head h3 { margin:1px 0 2px; font-size:17px; font-weight:620; overflow-wrap:anywhere; }
-  .drawer-head h3:focus { outline:none; }
+  .sidemenu-head { display:flex; gap:12px; align-items:flex-start; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--line); }
+  .sidemenu-head .eyebrow { font-size:12px; font-weight:500; color:var(--muted); }
+  .sidemenu-head h3 { margin:1px 0 2px; font-size:17px; font-weight:620; overflow-wrap:anywhere; }
+  .sidemenu-head h3:focus { outline:none; }
   #detMeta { font-size:12px; color:var(--muted); }
   .drawer-body { flex:1; overflow:auto; padding:16px 20px 32px; }
   .kv { display:grid; grid-template-columns:minmax(110px, max-content) minmax(0, 1fr); gap:5px 16px; margin:0; font:12px/1.5 var(--mono); }
@@ -490,12 +499,9 @@
   }
 
   @media (max-width: 600px) {
-    header { padding:0 16px; column-gap:12px; }
-    .theme-btn, .account-btn, .logout-btn { order:1; }
-    .account-btn, .logout-btn { margin-left:-10px; }
-    header nav { order:2; flex:1 1 100%; margin:0 -16px -1px; padding:0 6px; }
-    header nav a { padding:10px 10px 9px; }
-    header nav a.grp::before { top:12px; bottom:10px; }
+    header .brand-name { display:none; }
+    header .crumb::before { display:none; }
+    .sidemenu nav a { padding:10px; }
     main { padding:20px 16px 48px; }
     /* fingers need more than 32px */
     button, input:not([type=checkbox]), select { height:38px; }
@@ -512,6 +518,7 @@
   @media (forced-colors: active) {
     .dev.active, #invTable tbody tr.item.open { outline:2px solid Highlight; }
     .secnav button[aria-current="true"] { outline:2px solid Highlight; }
+    .sidemenu nav a[aria-current="page"] { outline:2px solid Highlight; }
   }
 
   /* ---------- IP lookup ---------- */
@@ -596,35 +603,54 @@
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <header>
+  <button type="button" class="menu-btn" id="menuBtn" aria-haspopup="dialog" aria-controls="sidemenu" aria-label="Open menu" title="Menu">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
   <div class="brand">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5z"/><path fill="none" stroke="var(--bg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m8.5 12 2.5 2.5 4.5-5"/></svg>
-    FortiGate Backup
+    <span class="brand-name">FortiGate Backup</span>
   </div>
-  <nav id="nav" aria-label="Main">
-    <a href="#overview" data-view="overview">Overview</a>
-    <a href="#firewalls" data-view="firewalls" class="grp">Firewalls<span class="count" id="fwCount"></span></a>
-    <a href="#backups" data-view="backups">Backups<span class="count" id="bkCount"></span></a>
-    <a href="#inventory" data-view="inventory" class="grp">Inventory<span class="count" id="invCount" hidden></span></a>
-    <a href="#iplookup" data-view="iplookup">IP lookup</a>
-    <a href="#security" data-view="security" class="grp">Security<span class="count" id="secCount" hidden></span></a>
-    <a href="#cves" data-view="cves">CVEs<span class="count" id="cveCount" hidden></span></a>
-    <a href="#feeds" data-view="feeds">Threat feeds<span class="count" id="tfCount" hidden></span></a>
-    <a href="#compliance" data-view="compliance">Compliance</a>
-    <a href="#mitigation" data-view="mitigation">Mitigation<span class="count" id="mitCount" hidden></span></a>
-    <a href="#push" data-view="push" class="grp admin-only">Push</a>
-    <a href="#users" data-view="users" class="grp admin-only">Users</a>
-  </nav>
+  <span class="crumb" id="viewTitle" aria-hidden="true"></span>
   <button type="button" class="theme-btn" id="themeBtn" aria-label="Toggle dark theme">
     <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
     <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 1.5v2.5M12 20v2.5M1.5 12H4M20 12h2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/></svg>
   </button>
-  <button type="button" class="account-btn" id="accountBtn" aria-haspopup="dialog" aria-label="Account" title="Account">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0"/></svg>
-  </button>
-  <button type="button" class="logout-btn" id="logoutBtn" aria-label="Log out" title="Log out">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l-4-4m0 0 4-4m-4 4h10"/></svg>
-  </button>
 </header>
+<!-- Side menu: a native modal, so focus is trapped, the page is inert and Esc closes it. -->
+<dialog class="sidemenu" id="sidemenu" aria-label="Menu" closedby="any">
+  <div class="sidemenu-head">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5z"/><path fill="none" stroke="var(--surface)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m8.5 12 2.5 2.5 4.5-5"/></svg>
+      FortiGate Backup
+    </div>
+    <button type="button" class="icon-btn" id="menuClose" aria-label="Close menu" title="Close">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <nav id="nav" aria-label="Main">
+    <a href="#overview" data-view="overview">Overview</a>
+    <h3>Devices</h3>
+    <a href="#firewalls" data-view="firewalls">Firewalls<span class="count" id="fwCount"></span></a>
+    <a href="#backups" data-view="backups">Backups<span class="count" id="bkCount"></span></a>
+    <h3>Look up</h3>
+    <a href="#inventory" data-view="inventory">Inventory<span class="count" id="invCount" hidden></span></a>
+    <a href="#iplookup" data-view="iplookup">IP lookup</a>
+    <h3>Assess</h3>
+    <a href="#security" data-view="security">Security<span class="count" id="secCount" hidden></span></a>
+    <a href="#cves" data-view="cves">CVEs<span class="count" id="cveCount" hidden></span></a>
+    <a href="#feeds" data-view="feeds">Threat feeds<span class="count" id="tfCount" hidden></span></a>
+    <a href="#compliance" data-view="compliance">Compliance</a>
+    <a href="#mitigation" data-view="mitigation">Mitigation<span class="count" id="mitCount" hidden></span></a>
+    <h3 class="admin-only">Administration</h3>
+    <a href="#push" data-view="push" class="admin-only">Push</a>
+    <a href="#users" data-view="users" class="admin-only">Users</a>
+  </nav>
+  <div class="sidemenu-foot">
+    <div class="who"><strong id="meName"></strong><span id="meRole"></span></div>
+    <button type="button" class="small" id="accountBtn" aria-haspopup="dialog">Change password</button>
+    <button type="button" class="small" id="logoutBtn">Log out</button>
+  </div>
+</dialog>
 <main id="main" tabindex="-1">
 <div class="view" data-view="overview" hidden>
   <section aria-labelledby="ovTitle">
@@ -768,8 +794,8 @@
       <div class="invnote" id="invNote"></div>
     </section>
   </div>
-  <aside class="drawer" id="invDetail" aria-labelledby="detTitle" hidden>
-    <div class="drawer-head">
+  <aside class="sidemenu" id="invDetail" aria-labelledby="detTitle" hidden>
+    <div class="sidemenu-head">
       <div>
         <div class="eyebrow" id="detKind"></div>
         <h3 id="detTitle" tabindex="-1"></h3>
@@ -1232,7 +1258,10 @@ function showView() {
     else a.removeAttribute('aria-current');
   });
   const VIEW_TITLE = { iplookup: 'IP lookup', cves: 'CVEs', feeds: 'Threat feeds' };
-  document.title = `${VIEW_TITLE[view] || view[0].toUpperCase() + view.slice(1)} · FortiGate Backup`;
+  const title = VIEW_TITLE[view] || view[0].toUpperCase() + view.slice(1);
+  document.title = `${title} · FortiGate Backup`;
+  $('#viewTitle').textContent = title;
+  if ($('#sidemenu').open) $('#sidemenu').close();
   // Inventory tables and search results need more room.
   $('main').classList.toggle('wide', !['overview', 'firewalls', 'push', 'users'].includes(view));
   if (view === 'overview') applyOverview();
@@ -1248,6 +1277,15 @@ function showView() {
   if (view === 'mitigation') applyMitState(params);
 }
 window.addEventListener('popstate', showView);
+
+// ---------- side menu ----------
+$('#menuBtn').onclick = () => {
+  $('#sidemenu').showModal();
+  ($('#nav a[aria-current="page"]') || $('#nav a')).focus();
+};
+$('#menuClose').onclick = () => $('#sidemenu').close();
+// Picking the view already shown fires no hashchange, so close here too.
+$('#nav').addEventListener('click', (e) => { if (e.target.closest('a')) $('#sidemenu').close(); });
 window.addEventListener('hashchange', showView);
 
 // "/" focuses the search box of the current view, Esc clears it.
@@ -1273,8 +1311,8 @@ const ROLE_LABEL = { admin: 'Admin', viewer: 'Read-only' };
 async function loadMe() {
   Object.assign(me, await api('GET', '/api/me'));
   document.body.dataset.role = me.role;
-  $('#accountBtn').title = `${me.name} (${ROLE_LABEL[me.role]}): change password`;
-  $('#accountBtn').ariaLabel = `Account ${me.name}`;
+  $('#meName').textContent = me.name;
+  $('#meRole').textContent = ROLE_LABEL[me.role];
 }
 
 // Change password: your own (asks for the current one) or, for an admin, another user's.
@@ -1293,7 +1331,7 @@ function openPwDlg(name) {
   $('#pwDlg').showModal();
   (own ? f.current : f.password).focus();
 }
-$('#accountBtn').onclick = () => openPwDlg(me.name);
+$('#accountBtn').onclick = () => { $('#sidemenu').close(); openPwDlg(me.name); };
 $('#pwCancel').onclick = () => $('#pwDlg').close();
 $('#pwForm').password.oninput = $('#pwForm').password2.oninput = () => {
   const f = $('#pwForm');
