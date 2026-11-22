@@ -2116,18 +2116,47 @@ function memberValue(m) {
   return '';
 }
 
+// Threat feed in a correlation: type, entry count and status of the newest check.
+function feedSummary(f) {
+  const when = f.pulled_at ? ` <span class="via">checked ${esc(fmtDate(f.pulled_at))}</span>` : '';
+  const state = f.entries == null ? ` <span class="empty">${f.pulled_at ? esc(f.error || 'not checked') : 'not checked yet'}</span>`
+    : ` <span class="tag">${f.entries} entr${f.entries === 1 ? 'y' : 'ies'}</span>${f.invalid ? ` <span class="down">${f.invalid} invalid</span>` : ''}`
+      + (f.ok ? '' : ` <span class="down">${esc(f.error || 'failing')}</span>`);
+  return esc(f.type || '') + (f.resource ? ` ${mono(f.resource)}` : '') + state + when;
+}
+
+// The feed's entries as items under it (only the first ones are returned).
+function feedEntries(f, depth) {
+  if (!f.sample?.length) return '';
+  const more = (f.entries ?? 0) - f.sample.length;
+  return f.sample.map((e) => `<li style="padding-left:${depth * 18}px">└ ${mono(e)}</li>`).join('')
+    + (more > 0 ? `<li class="more" style="padding-left:${depth * 18}px">+${more} more (IP lookup searches them all)</li>` : '');
+}
+
 function renderXref(r, x) {
   if (!x) return '<div class="empty">Loading…</div>';
   if (x.error) return `<div class="err">${esc(x.error)}</div>`;
   const parts = [];
+  const feedOf = (name) => (x.feeds || []).find((f) => f.name === name);
+  // A threat feed: what it held in the newest status check.
+  if (inv.section === 'feeds') {
+    const f = feedOf(r.name);
+    parts.push(`<div><h4>Contents${f?.entries != null ? ` · ${f.entries} entr${f.entries === 1 ? 'y' : 'ies'}` : ''}</h4>${
+      f ? `${feedSummary(f)}<ul>${feedEntries(f, 0)}</ul>` : '<span class="empty">Not checked yet: use Check status now in Threat feeds.</span>'}</div>`);
+  }
   // What it contains: groups expanded to the actual addresses / VIPs.
   const fields = [...new Set(x.members.map((m) => m.field))].sort((a, b) => FIELD_ORDER.indexOf(a) - FIELD_ORDER.indexOf(b));
   for (const f of fields) {
     const list = x.members.filter((m) => m.field === f);
     const leaves = list.filter((m) => !/grp$/.test(m.kind)).length;
     parts.push(`<div><h4>${FIELD_LABEL[f] || esc(f)} · ${leaves} object${leaves === 1 ? '' : 's'}</h4><ul>${
-      list.slice(0, MAX_REFS).map((m) => `<li style="padding-left:${m.depth * 18}px">${m.depth ? '└ ' : ''}${objLink(r, m.kind, m.name, m.name)}
-        <span class="tag">${KIND_LABEL[m.kind] || esc(m.kind)}</span> ${memberValue(m)}${m.comment ? ` <span class="via">${esc(m.comment)}</span>` : ''}</li>`).join('')}${
+      list.slice(0, MAX_REFS).map((m) => {
+        // A threat feed lists what it holds below it; a global one opens in the global scope.
+        const feed = m.kind === 'external' && feedOf(m.name);
+        return `<li style="padding-left:${m.depth * 18}px">${m.depth ? '└ ' : ''}${objLink(feed ? { ...r, vdom: feed.vdom } : r, m.kind, m.name, m.name)}
+        <span class="tag">${KIND_LABEL[m.kind] || esc(m.kind)}</span> ${feed ? feedSummary(feed) : memberValue(m)}${m.comment ? ` <span class="via">${esc(m.comment)}</span>` : ''}</li>`
+          + (feed ? feedEntries(feed, m.depth + 1) : '');
+      }).join('')}${
       list.length > MAX_REFS ? `<li class="more">+${list.length - MAX_REFS} more</li>` : ''}</ul></div>`);
   }
   // Where it is used, directly or through (nested) groups.

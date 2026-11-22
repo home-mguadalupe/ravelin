@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-22 — Threat feed contents in the inventory
+
+### Fixed
+- Opening a policy (or group) that uses a threat feed showed only the feed's name. It now
+  shows its type, URL, number of entries, status and the first 100 entries from the newest
+  status check, so it works even before the backups are re-ingested into `threat_feeds`.
+- Opening a feed under **Objects → Threat Feeds** shows a **Contents** block with the same.
+- The link to a global feed from a policy opens it in the `global` scope instead of the
+  policy's VDOM.
+
 ## 2026-11-21 — Threat feeds tab
 
 ### New: Threat feeds
