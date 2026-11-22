@@ -16,6 +16,18 @@ CREATE TABLE IF NOT EXISTS firewalls (
   created_at    timestamptz NOT NULL DEFAULT now()
 );
 
+-- Login accounts for the web UI. Only a scrypt hash of each password is kept.
+CREATE TABLE IF NOT EXISTS users (
+  name                text PRIMARY KEY,                -- lower case
+  role                text NOT NULL CHECK (role IN ('admin', 'viewer')),
+  disabled            boolean NOT NULL DEFAULT false,
+  salt                text NOT NULL,                   -- base64
+  hash                text NOT NULL,                   -- base64 scrypt(password, salt), 32 bytes
+  created_at          timestamptz NOT NULL DEFAULT now(),
+  password_changed_at timestamptz NOT NULL DEFAULT now(),
+  last_login_at       timestamptz
+);
+
 CREATE TABLE IF NOT EXISTS devices (
   id         serial PRIMARY KEY,
   serial     text UNIQUE,                -- from the REST API at backup time (not in the .conf)

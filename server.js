@@ -138,6 +138,7 @@ async function handle(req, res) {
   const url = new URL(req.url, 'http://localhost');
   const p = url.pathname;
   const m = req.method;
+  let match;
 
   // ---------- login ----------
   // Everything below the login routes needs a session.
@@ -145,15 +146,16 @@ async function handle(req, res) {
     return send(res, 403, { error: 'Cross-site request refused' });
   }
 
+  // Answers an auth.js result: sets the session cookie, or sends its error.
+  const authResult = (r, ok = { ok: true }) => {
+    if (r.cookie) res.setHeader('Set-Cookie', r.cookie);
+    if (r.retryAfter) res.setHeader('Retry-After', r.retryAfter);
+    return r.error ? send(res, r.status, { error: r.error }) : send(res, 200, ok);
+  };
+
   if (m === 'POST' && p === '/api/login') {
     const b = await readJson(req);
-    const r = auth.login(req, b.user, b.password);
-    if (!r.cookie) {
-      if (r.retryAfter) res.setHeader('Retry-After', r.retryAfter);
-      return send(res, r.status, { error: r.error });
-    }
-    res.setHeader('Set-Cookie', r.cookie);
-    return send(res, 200, { ok: true });
+    return authResult(await auth.login(req, b.user, b.password));
   }
 
   if (m === 'POST' && p === '/api/logout') {
@@ -161,11 +163,32 @@ async function handle(req, res) {
     return send(res, 200, { ok: true });
   }
 
+  // Whether the login form should mention the temporary login.
+  if (m === 'GET' && p === '/api/login/info') {
+    return send(res, 200, { firstStart: auth.setupPending() });
+  }
+
   const user = auth.user(req);
 
-  if (m === 'GET' && p === '/login') {
+  // The temporary login (no account yet) can only create the first admin.
+  if (user?.role === 'setup') {
+    if (m === 'GET' && p === '/setup') return sendPage(res, 'setup.html');
+    if (m === 'POST' && p === '/api/setup') {
+      const b = await readJson(req);
+      return authResult(await auth.setup(req, user, b.user, b.password));
+    }
+    if (p.startsWith('/api/')) return send(res, 403, { error: 'Create your own admin account first: open /setup' });
+    res.writeHead(302, { Location: '/setup' });
+    return res.end();
+  }
+
+  if (m === 'GET' && (p === '/login' || p === '/setup')) {
     if (user) {
       res.writeHead(302, { Location: '/' });
+      return res.end();
+    }
+    if (p === '/setup') {
+      res.writeHead(302, { Location: '/login' });
       return res.end();
     }
     return sendPage(res, 'login.html');
@@ -177,6 +200,34 @@ async function handle(req, res) {
     const next = p === '/' ? '' : `?next=${encodeURIComponent(p + url.search)}`;
     res.writeHead(302, { Location: `/login${next}` });
     return res.end();
+  }
+
+  if (!auth.allowed(user, m, p)) return send(res, 403, { error: 'Read-only account: ask an admin' });
+
+  // ---------- accounts ----------
+  if (m === 'GET' && p === '/api/me') {
+    return send(res, 200, { ...user, minPassword: auth.MIN_PASSWORD });
+  }
+
+  if (m === 'POST' && p === '/api/me/password') {
+    const b = await readJson(req);
+    return authResult(await auth.changeOwnPassword(req, user, b.current, b.password));
+  }
+
+  if (m === 'GET' && p === '/api/users') {
+    return send(res, 200, await auth.listUsers());
+  }
+
+  if (m === 'POST' && p === '/api/users') {
+    const b = await readJson(req);
+    return send(res, 201, await auth.addUser(b.user, b.role, b.password));
+  }
+
+  match = p.match(/^\/api\/users\/([^/]+)$/);
+  if ((m === 'PATCH' || m === 'DELETE') && match) {
+    const name = decodeURIComponent(match[1]);
+    const r = m === 'PATCH' ? await auth.updateUser(user, name, await readJson(req)) : await auth.removeUser(user, name);
+    return authResult(r, r.user || { ok: true });
   }
 
   if (m === 'GET' && (p === '/' || p === '/report')) {
@@ -367,7 +418,7 @@ async function handle(req, res) {
   }
 
   // Correlation for one object: ?vdom=&name= (policy id / route seq for policies).
-  let match = p.match(/^\/api\/inventory\/snapshots\/(\d+)\/xref\/(\w+)$/);
+  match = p.match(/^\/api\/inventory\/snapshots\/(\d+)\/xref\/(\w+)$/);
   if (m === 'GET' && match) {
     const q = url.searchParams;
     return send(res, 200, await inventory.xref(Number(match[1]), match[2], q.get('vdom') || '', q.get('name') || ''), req);
@@ -473,7 +524,7 @@ async function handle(req, res) {
       if (!fw) return send(res, 404, { error: 'Firewall not found' });
       fws.push(fw);
     }
-    return send(res, 200, { results: await push.remove(fws, b.type, b.name) });
+    return send(res, 200, { results: await push.remove(fws, b.type, b.name, user.name) });
   }
 
   // Checks one object definition without touching a firewall (throws on invalid input).
@@ -501,7 +552,7 @@ async function handle(req, res) {
       fwById.set(id, fw);
     }
     const targets = wanted.map((t) => ({ fw: fwById.get(t.id), vdom: t.vdom }));
-    return send(res, 200, await push.push(targets, { type: b.type, data: b.data, update: b.update, dryRun: !!b.dryRun, objects: b.objects }));
+    return send(res, 200, await push.push(targets, { type: b.type, data: b.data, update: b.update, dryRun: !!b.dryRun, objects: b.objects, by: user.name }));
   }
 
   match = p.match(/^\/api\/firewalls\/([\w-]+)\/vdoms$/);

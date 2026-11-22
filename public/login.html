@@ -48,6 +48,9 @@
   button:disabled { opacity:.45; cursor:default; }
   .msg { margin:0; padding:8px 12px; border-radius:var(--radius-sm); background:var(--err-soft); color:var(--err); font-size:13px; }
   .msg:empty { display:none; }
+  .note { margin:0; padding:8px 12px; border-radius:var(--radius-sm); background:var(--surface-2); color:var(--muted); font-size:13px; }
+  .note[hidden] { display:none; }
+  code { font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12.5px; color:var(--fg); }
 </style>
 </head>
 <body>
@@ -56,6 +59,8 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5z"/><path fill="none" stroke="var(--bg)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m8.5 12 2.5 2.5 4.5-5"/></svg>
     FortiGate Backup
   </h1>
+  <p class="note" id="firstStart" hidden>First start: log in with <code>admin</code> / <code>admin</code>
+    and create your own admin account.</p>
   <label>User
     <input name="user" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
   </label>
@@ -69,6 +74,8 @@
 const form = document.getElementById('loginForm');
 const msg = document.getElementById('msg');
 const btn = document.getElementById('submitBtn');
+
+fetch('/api/login/info').then((r) => r.json()).then((i) => { document.getElementById('firstStart').hidden = !i.firstStart; }).catch(() => {});
 
 // Where to go afterwards: only a path on this site, never another host.
 const next = new URLSearchParams(location.search).get('next') || '/';
@@ -84,6 +91,7 @@ form.onsubmit = async (e) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ user: form.user.value, password: form.password.value }),
     });
+    // The temporary login is sent on to /setup by the server.
     if (res.ok) return location.replace(target);
     msg.textContent = (await res.json().catch(() => ({}))).error || res.statusText;
   } catch {

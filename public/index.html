@@ -61,7 +61,12 @@
   .theme-btn:hover { color:var(--fg); }
   .logout-btn { margin-left:-20px; width:32px; padding:0; border-color:transparent; background:transparent; color:var(--muted); }
   .logout-btn:hover { color:var(--fg); }
+  .account-btn { margin-left:-20px; width:32px; padding:0; border-color:transparent; background:transparent; color:var(--muted); }
+  .account-btn:hover { color:var(--fg); }
+  .account-btn svg { width:16px; height:16px; }
   .theme-btn .sun, :root[data-theme="dark"] .theme-btn .moon { display:none; }
+  /* What only an admin can use; the server refuses it for read-only accounts anyway. */
+  body[data-role="viewer"] .admin-only { display:none !important; }
   :root[data-theme="dark"] .theme-btn .sun { display:block; }
 
   /* ---------- layout + base controls ---------- */
@@ -117,6 +122,9 @@
   dialog.confirm p { margin:0 0 18px; color:var(--muted); white-space:pre-line; overflow-wrap:anywhere; }
   dialog.confirm p[hidden] { display:none; }
   dialog.confirm form { display:flex; justify-content:flex-end; gap:8px; }
+  dialog.confirm form.stack { display:grid; grid-template-columns:minmax(0, 1fr); gap:12px; }
+  dialog.confirm form.stack .formbtns { justify-content:flex-end; margin-top:4px; }
+  dialog.confirm .msg:empty { display:none; }
   dialog:modal { overscroll-behavior:contain; }
   dialog::backdrop { background:rgb(0 0 0 / .45); overflow:hidden; overscroll-behavior:contain; }
   dialog[open]::backdrop { opacity:1; transition:opacity .14s; }
@@ -483,8 +491,8 @@
 
   @media (max-width: 600px) {
     header { padding:0 16px; column-gap:12px; }
-    .theme-btn, .logout-btn { order:1; }
-    .logout-btn { margin-left:-10px; }
+    .theme-btn, .account-btn, .logout-btn { order:1; }
+    .account-btn, .logout-btn { margin-left:-10px; }
     header nav { order:2; flex:1 1 100%; margin:0 -16px -1px; padding:0 6px; }
     header nav a { padding:10px 10px 9px; }
     header nav a.grp::before { top:12px; bottom:10px; }
@@ -603,11 +611,15 @@
     <a href="#feeds" data-view="feeds">Threat feeds<span class="count" id="tfCount" hidden></span></a>
     <a href="#compliance" data-view="compliance">Compliance</a>
     <a href="#mitigation" data-view="mitigation">Mitigation<span class="count" id="mitCount" hidden></span></a>
-    <a href="#push" data-view="push" class="grp">Push</a>
+    <a href="#push" data-view="push" class="grp admin-only">Push</a>
+    <a href="#users" data-view="users" class="grp admin-only">Users</a>
   </nav>
   <button type="button" class="theme-btn" id="themeBtn" aria-label="Toggle dark theme">
     <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
     <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5" fill="currentColor"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 1.5v2.5M12 20v2.5M1.5 12H4M20 12h2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/></svg>
+  </button>
+  <button type="button" class="account-btn" id="accountBtn" aria-haspopup="dialog" aria-label="Account" title="Account">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0"/></svg>
   </button>
   <button type="button" class="logout-btn" id="logoutBtn" aria-label="Log out" title="Log out">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l-4-4m0 0 4-4m-4 4h10"/></svg>
@@ -646,7 +658,7 @@
 </div>
 
 <div class="view" data-view="firewalls" hidden>
-  <section id="addSection" aria-labelledby="addTitle" hidden>
+  <section id="addSection" class="admin-only" aria-labelledby="addTitle" hidden>
     <div class="head">
       <h2 id="addTitle">Add firewall</h2>
       <button type="button" id="addClose">Close</button>
@@ -672,8 +684,8 @@
         <div class="sub" id="fwAuto"></div>
       </div>
       <div class="btns">
-        <button type="button" id="backupAll" hidden>Back up all</button>
-        <button type="button" class="primary" id="addOpen"><span aria-hidden="true">+</span> Add firewall</button>
+        <button type="button" id="backupAll" class="admin-only" hidden>Back up all</button>
+        <button type="button" class="primary admin-only" id="addOpen"><span aria-hidden="true">+</span> Add firewall</button>
       </div>
     </div>
     <div class="wrap">
@@ -774,7 +786,7 @@
 <div class="view" data-view="push" hidden>
   <div class="banner" id="puOff" role="note" hidden>
     Pushing is disabled on this server: <b>Preview</b> works (it only reads from the firewalls), <b>Push</b> does not.
-    Restart the server with <code>ENABLE_PUSH=1</code> to allow changes. Everyone who can log in here can then change the
+    Restart the server with <code>ENABLE_PUSH=1</code> to allow changes. Every admin account here can then change the
     firewalls, administrators included.
   </div>
   <section aria-labelledby="puTitle">
@@ -841,7 +853,7 @@
     </div>
     <div class="wrap">
       <table>
-        <thead><tr><th scope="col">When</th><th scope="col">Firewall</th><th scope="col">VDOM</th><th scope="col">Object</th><th scope="col">Result</th></tr></thead>
+        <thead><tr><th scope="col">When</th><th scope="col">By</th><th scope="col">Firewall</th><th scope="col">VDOM</th><th scope="col">Object</th><th scope="col">Result</th></tr></thead>
         <tbody id="puHist"></tbody>
       </table>
     </div>
@@ -1019,7 +1031,45 @@
   </section>
 </div>
 
+<div class="view" data-view="users" hidden>
+  <section aria-labelledby="usTitle">
+    <div class="page-head">
+      <div>
+        <h2 id="usTitle">Users</h2>
+        <div class="sub">Admins can do everything; read-only users can look at backups, inventory and reports but change nothing.</div>
+      </div>
+    </div>
+    <form id="usForm">
+      <label>User<input name="user" required maxlength="64" pattern="[A-Za-z0-9][A-Za-z0-9._@\-]*" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+      <label>Role<select name="role"><option value="viewer">Read-only</option><option value="admin">Admin</option></select></label>
+      <label>Password<input name="password" type="password" required minlength="12" autocomplete="new-password"></label>
+      <div class="formbtns"><button type="submit" class="primary">Add user</button></div>
+    </form>
+    <div class="msg" id="usMsg" role="status" aria-live="polite"></div>
+    <div class="wrap">
+      <table>
+        <thead><tr><th scope="col">User</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Last login</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+        <tbody id="usBody"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
 </main>
+<dialog class="confirm" id="pwDlg" aria-labelledby="pwTitle" closedby="any">
+  <h2 id="pwTitle">Change password</h2>
+  <p id="pwFor"></p>
+  <form class="stack" id="pwForm">
+    <label id="pwCurLabel">Current password<input name="current" type="password" autocomplete="current-password"></label>
+    <label>New password<input name="password" type="password" required minlength="12" autocomplete="new-password"></label>
+    <label>Repeat new password<input name="password2" type="password" required minlength="12" autocomplete="new-password"></label>
+    <div class="msg" id="pwMsg" role="alert"></div>
+    <div class="formbtns">
+      <button type="button" id="pwCancel">Cancel</button>
+      <button type="submit" class="primary">Change password</button>
+    </div>
+  </form>
+</dialog>
 <dialog class="confirm" id="confirmDlg" aria-labelledby="cfTitle" aria-describedby="cfBody" closedby="any">
   <h2 id="cfTitle"></h2>
   <p id="cfBody"></p>
@@ -1051,6 +1101,9 @@ const SVG = {
   download: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg>',
   trash: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M10 11v6M14 11v6M5 7l1 13h12l1-13M9 7V4h6v3"/></svg>',
 };
+
+// The logged-in user; the role decides which controls are shown (the server checks it too).
+const me = { name: '', role: 'viewer' };
 
 async function api(method, url, body, signal) {
   const res = await fetch(url, {
@@ -1154,10 +1207,12 @@ syncThemeBtn();
 // ---------- routing ----------
 // The hash holds the view plus its state, e.g. #inventory?dev=2&sec=vips&q=10.1
 // so links can be shared and the back button works.
-const VIEWS = ['overview', 'firewalls', 'backups', 'inventory', 'iplookup', 'security', 'cves', 'feeds', 'compliance', 'mitigation', 'push'];
+const VIEWS = ['overview', 'firewalls', 'backups', 'inventory', 'iplookup', 'security', 'cves', 'feeds', 'compliance', 'mitigation', 'push', 'users'];
+const ADMIN_VIEWS = ['push', 'users'];
 const route = () => {
   const [view, qs] = location.hash.slice(1).split('?');
-  return { view: VIEWS.includes(view) ? view : VIEWS[0], params: new URLSearchParams(qs) };
+  const ok = VIEWS.includes(view) && (me.role === 'admin' || !ADMIN_VIEWS.includes(view));
+  return { view: ok ? view : VIEWS[0], params: new URLSearchParams(qs) };
 };
 
 function setHash(view, params, push) {
@@ -1179,11 +1234,12 @@ function showView() {
   const VIEW_TITLE = { iplookup: 'IP lookup', cves: 'CVEs', feeds: 'Threat feeds' };
   document.title = `${VIEW_TITLE[view] || view[0].toUpperCase() + view.slice(1)} · FortiGate Backup`;
   // Inventory tables and search results need more room.
-  $('main').classList.toggle('wide', !['overview', 'firewalls', 'push'].includes(view));
+  $('main').classList.toggle('wide', !['overview', 'firewalls', 'push', 'users'].includes(view));
   if (view === 'overview') applyOverview();
   if (view === 'inventory') applyInvState(params);
   if (view === 'backups') applySearchState(params);
   if (view === 'push') loadPushHistory();
+  if (view === 'users') loadUsers();
   if (view === 'iplookup') applyIpState(params);
   if (view === 'security') applySecState(params);
   if (view === 'cves') applyCveState(params);
@@ -1210,6 +1266,106 @@ document.addEventListener('keydown', (e) => {
     closeDetail();
   }
 });
+
+// ---------- accounts ----------
+const ROLE_LABEL = { admin: 'Admin', viewer: 'Read-only' };
+
+async function loadMe() {
+  Object.assign(me, await api('GET', '/api/me'));
+  document.body.dataset.role = me.role;
+  $('#accountBtn').title = `${me.name} (${ROLE_LABEL[me.role]}): change password`;
+  $('#accountBtn').ariaLabel = `Account ${me.name}`;
+}
+
+// Change password: your own (asks for the current one) or, for an admin, another user's.
+let pwFor = null;
+function openPwDlg(name) {
+  pwFor = name;
+  const own = name === me.name;
+  const f = $('#pwForm');
+  f.reset();
+  $('#pwMsg').textContent = '';
+  $('#pwTitle').textContent = own ? 'Change your password' : `Set a new password for ${name}`;
+  $('#pwFor').textContent = own ? `Signed in as ${me.name} (${ROLE_LABEL[me.role]}). Other browsers logged in as you will be logged out.`
+    : `${name} is logged out everywhere and logs in with the new password.`;
+  $('#pwCurLabel').hidden = !own;
+  f.current.required = own;
+  $('#pwDlg').showModal();
+  (own ? f.current : f.password).focus();
+}
+$('#accountBtn').onclick = () => openPwDlg(me.name);
+$('#pwCancel').onclick = () => $('#pwDlg').close();
+$('#pwForm').password.oninput = $('#pwForm').password2.oninput = () => {
+  const f = $('#pwForm');
+  f.password2.setCustomValidity(f.password2.value && f.password2.value !== f.password.value ? 'The passwords do not match' : '');
+};
+$('#pwForm').onsubmit = (e) => {
+  e.preventDefault();
+  const f = e.target;
+  return busy(e.submitter, async () => {
+    try {
+      if (pwFor === me.name) await api('POST', '/api/me/password', { current: f.current.value, password: f.password.value });
+      else await api('PATCH', `/api/users/${encodeURIComponent(pwFor)}`, { password: f.password.value });
+      $('#pwDlg').close();
+      if (pwFor !== me.name) setMsg($('#usMsg'), true, `New password set for <b>${esc(pwFor)}</b>.`);
+      else if (route().view === 'users') setMsg($('#usMsg'), true, 'Your password was changed.');
+    } catch (err) { setMsg($('#pwMsg'), false, esc(err.message)); }
+  });
+};
+
+const us = { list: [] };
+async function loadUsers() {
+  try { us.list = await api('GET', '/api/users'); } catch (err) { return setMsg($('#usMsg'), false, esc(err.message)); }
+  $('#usBody').innerHTML = us.list.map((u) => {
+    const self = u.name === me.name;
+    return `<tr data-name="${esc(u.name)}">
+      <td class="fwname"><b>${esc(u.name)}</b>${self ? '<span class="mono">you</span>' : ''}</td>
+      <td>${ROLE_LABEL[u.role] || esc(u.role)}</td>
+      <td>${u.disabled ? '<span class="pill err">Disabled</span>' : '<span class="pill ok">Active</span>'}</td>
+      <td>${u.lastLoginAt ? `<span title="${esc(fmtDate(u.lastLoginAt))}">${ago(u.lastLoginAt)}</span>` : '<span class="empty">never</span>'}</td>
+      <td class="actions">${self ? `<button class="small" data-act="password">Change password</button>` : `
+        <button class="small" data-act="role" aria-label="Make ${esc(u.name)} ${u.role === 'admin' ? 'read-only' : 'admin'}">${u.role === 'admin' ? 'Make read-only' : 'Make admin'}</button>
+        <button class="small" data-act="password" aria-label="Set a new password for ${esc(u.name)}">Set password</button>
+        <button class="small" data-act="disable" aria-label="${u.disabled ? 'Enable' : 'Disable'} ${esc(u.name)}">${u.disabled ? 'Enable' : 'Disable'}</button>
+        <button class="small ghost icon-btn danger" data-act="delete" aria-label="Delete ${esc(u.name)}" title="Delete">${SVG.trash}</button>`}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+$('#usForm').onsubmit = (e) => {
+  e.preventDefault();
+  const f = e.target;
+  return busy(e.submitter, async () => {
+    try {
+      const u = await api('POST', '/api/users', { user: f.user.value, role: f.role.value, password: f.password.value });
+      f.reset();
+      setMsg($('#usMsg'), true, `Added <b>${esc(u.name)}</b> (${ROLE_LABEL[u.role]}).`);
+      loadUsers();
+    } catch (err) { setMsg($('#usMsg'), false, esc(err.message)); }
+  });
+};
+
+$('#usBody').onclick = async (e) => {
+  const btn = e.target.closest('button[data-act]');
+  if (!btn) return;
+  const name = btn.closest('tr').dataset.name;
+  const u = us.list.find((x) => x.name === name);
+  if (btn.dataset.act === 'password') return openPwDlg(name);
+  if (btn.dataset.act === 'delete'
+    && !await ask({ title: `Delete ${name}?`, body: 'The account is removed and logged out everywhere. Its pushes stay in the log.', ok: 'Delete', danger: true })) return;
+  if (btn.dataset.act === 'disable' && !u.disabled
+    && !await ask({ title: `Disable ${name}?`, body: 'The account is logged out everywhere and cannot log in until it is enabled again.', ok: 'Disable', danger: true })) return;
+  busy(btn, async () => {
+    try {
+      if (btn.dataset.act === 'delete') await api('DELETE', `/api/users/${encodeURIComponent(name)}`);
+      else await api('PATCH', `/api/users/${encodeURIComponent(name)}`,
+        btn.dataset.act === 'role' ? { role: u.role === 'admin' ? 'viewer' : 'admin' } : { disabled: !u.disabled });
+      $('#usMsg').className = 'msg'; $('#usMsg').textContent = '';
+      await loadUsers();
+    } catch (err) { setMsg($('#usMsg'), false, esc(err.message)); }
+  });
+};
 
 // ---------- firewalls ----------
 const toggleAdd = (open) => {
@@ -1246,18 +1402,18 @@ async function loadFirewalls() {
   const list = fws.list = await api('GET', '/api/firewalls');
   $('#fwCount').textContent = list.length;
   $('#backupAll').hidden = !list.length;
-  if (!list.length) toggleAdd(true);
+  if (!list.length && me.role === 'admin') toggleAdd(true);
   $('#fwBody').innerHTML = list.length ? list.map((f) => `
     <tr data-id="${esc(f.id)}">
       <td class="fwname"><b>${esc(f.name)}</b><span class="mono">${esc(f.host)}:${esc(f.port)}</span></td>
       <td class="last"></td>
       <td class="status" role="status" aria-live="polite"></td>
-      <td class="actions">
+      <td class="actions admin-only">
         <button class="small" data-act="test" aria-label="Test ${esc(f.name)}">Test</button>
         <button class="small" data-act="backup" aria-label="Back up ${esc(f.name)}">${SVG.download}Backup</button>
         <button class="small ghost icon-btn danger" data-act="delete" aria-label="Delete ${esc(f.name)}" title="Delete">${SVG.trash}</button>
       </td>
-    </tr>`).join('') : '<tr><td colspan="4" class="empty">No firewalls yet. Add one above to get started.</td></tr>';
+    </tr>`).join('') : `<tr><td colspan="4" class="empty">No firewalls yet.${me.role === 'admin' ? ' Add one above to get started.' : ''}</td></tr>`;
   renderLastBackups();
   renderPushTargets();
   renderAuto();
@@ -1397,7 +1553,7 @@ function renderBackups() {
       <td class="num">${fmtSize(b.size)}</td>
       <td class="actions">${!inv.enabled ? '<span class="empty">—</span>'
         : `${inDb.has(b.file) ? `<a class="pill ok" href="#inventory?snap=${inDb.get(b.file)}">In inventory</a>` : '<span class="pill">Not loaded</span>'}
-           <button class="small ghost" data-act="ingest" aria-label="${inDb.has(b.file) ? 'Reload' : 'Load'} ${esc(b.file)} into inventory">${inDb.has(b.file) ? 'Reload' : 'Load'}</button>
+           <button class="small ghost admin-only" data-act="ingest" aria-label="${inDb.has(b.file) ? 'Reload' : 'Load'} ${esc(b.file)} into inventory">${inDb.has(b.file) ? 'Reload' : 'Load'}</button>
            <span class="status" role="status" aria-live="polite"></span>`}</td>
       <td class="actions">
         <a class="iconlink" href="/api/backups/${encodeURIComponent(b.file)}" title="Download" aria-label="Download ${esc(b.file)}">${SVG.download}</a>
@@ -3335,12 +3491,13 @@ async function loadPushHistory() {
   $('#puHist').innerHTML = list.length ? list.map((h) => `
     <tr>
       <td><span title="${esc(fmtDate(h.at))}">${ago(h.at)}</span></td>
+      <td>${h.by ? esc(h.by) : '<span class="empty">—</span>'}</td>
       <td class="fwname"><b>${esc(h.firewall)}</b><span class="mono">${esc(h.host)}</span></td>
       <td class="mono">${esc(h.vdom)}</td>
       <td><span class="tag">${esc(pu.types[h.type] || h.type)}</span> ${esc(h.name ?? (h.key != null ? `#${h.key}` : ''))}</td>
       <td>${h.ok ? `<span class="pill ok">${{ update: 'Updated', delete: 'Deleted' }[h.action] || 'Created'}</span>${h.type === 'policy' && h.key != null ? ` ID ${esc(h.key)}` : ''}`
         : `<span class="pill err">${h.action === 'delete' ? 'Delete failed' : 'Failed'}</span> <span class="err">${esc(h.error)}</span>`}</td>
-    </tr>`).join('') : '<tr><td colspan="5" class="empty">Nothing pushed yet.</td></tr>';
+    </tr>`).join('') : '<tr><td colspan="6" class="empty">Nothing pushed yet.</td></tr>';
 }
 
 
@@ -4258,7 +4415,7 @@ async function applyOverview() {
   if (!hasRows) {
     $('#ovSub').textContent = '';
     $('#ovMsg').className = 'msg empty';
-    $('#ovMsg').innerHTML = 'No firewalls yet. <a href="#firewalls">Add one</a> to get started.';
+    $('#ovMsg').innerHTML = me.role === 'admin' ? 'No firewalls yet. <a href="#firewalls">Add one</a> to get started.' : 'No firewalls yet.';
     $('#ovAttn').innerHTML = '';
     $('#ovChgSec').hidden = true;
     return;
@@ -4335,12 +4492,15 @@ async function applyOverview() {
 }
 $('#ovReload').onclick = (e) => busy(e.target, applyOverview);
 
-// Start-up runs last: views read state declared anywhere above.
-showView();
-loadFirewalls();
-loadPushStatus();
-loadInventory().then(loadBackups).then(showView);
-loadAudit().catch(() => {});
+// Start-up runs last: views read state declared anywhere above. The role comes first, since
+// it decides which views and controls there are.
+loadMe().then(() => {
+  showView();
+  loadFirewalls();
+  if (me.role === 'admin') loadPushStatus();
+  loadInventory().then(loadBackups).then(showView);
+  loadAudit().catch(() => {});
+});
 </script>
 </body>
 </html>

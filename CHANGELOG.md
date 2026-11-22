@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-11-22 — User accounts
+
+### New: user accounts and roles
+- The single login from `AUTH_USER` / `AUTH_PASSWORD` (or `data/auth.json`) is replaced by
+  user accounts, stored in the `users` table (or `data/users.json` without a database), with
+  scrypt-hashed passwords.
+- Two roles: **Admin** (everything) and **Read-only** (looks, changes nothing). The server
+  enforces it; the UI hides what a read-only account cannot use, the Push tab included.
+- **Users** tab (admins): add accounts, make admin / read-only, set a password, disable,
+  delete. The last enabled admin cannot be removed, and no one can demote or delete themselves.
+- The account button in the header changes your own password.
+- First start: log in with the temporary login `admin` / `admin`. It can only open `/setup`, which
+  creates your own admin account; the temporary login stops working right after.
+- The push log records who made each push or deletion (**By** column in Recent pushes).
+
+### Upgrading
+- `AUTH_USER` / `AUTH_PASSWORD` and `data/auth.json` are no longer read; remove them. After
+  upgrading, log in with `admin` / `admin` and create your own admin account.
+
 ## 2026-11-22 — Threat feed contents in the inventory
 
 ### Fixed

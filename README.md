@@ -33,7 +33,8 @@ Runs the app and the inventory database together; only Docker is needed.
 docker compose up -d --build
 ```
 
-Open <http://127.0.0.1:5555>. The port is published on all host interfaces. Use
+Open <http://127.0.0.1:5555>. On first start it asks you to create the first admin
+account: log in with the temporary login `admin` / `admin`, which works only until then. The port is published on all host interfaces. Use
 `PORT=8080 docker compose up -d` for another host port. Set `PGPASSWORD`,
 `ENABLE_PUSH` or `FGT_MASTER_KEY` in the shell or in a `.env` file next to
 `docker-compose.yml` (URL-safe characters only in `PGPASSWORD`).
@@ -84,8 +85,6 @@ existing databases pick up new tables automatically.
 | `PGPASSWORD`   | `fortiinv`  | Password for the Postgres container in `docker-compose.yml`               |
 | `FGT_MASTER_KEY` | *(unset)* | Master key that encrypts the stored API keys (32 bytes, base64)          |
 | `FGT_MASTER_KEY_FILE` | `data/master.key` | Where the master key is read from / generated when `FGT_MASTER_KEY` is unset |
-| `AUTH_USER`    | `admin`     | User name for the login                                                   |
-| `AUTH_PASSWORD` | *(unset)*  | Password for the login; when unset one is generated on first start (see Security) |
 | `ENABLE_PUSH`  | *(unset)*   | `1` allows the **Push** tab to change firewall configuration (see Security) |
 | `AUTO_BACKUP_HOURS` | `24`   | Back up every firewall automatically this often (`0` = off)               |
 | `AUTO_ROUTES_HOURS` | `1`    | Refresh every firewall's routing table this often (`0` = off; needs `DATABASE_URL`) |
@@ -383,7 +382,9 @@ Keyboard: `/` focuses the search box, `Esc` clears it.
 server.js            HTTP server and JSON API
 public/index.html    the whole web UI
 public/login.html    login form (/login)
-lib/auth.js          login: password check, sessions, failed-login lockout
+public/setup.html    first admin account (/setup, only while there is none)
+lib/auth.js          login: password check, sessions, roles, failed-login lockout
+lib/users.js         user accounts (database or data/users.json)
 lib/fortigate.js     FortiGate REST API client (status, config backup, routing table)
 lib/routes.js        routing tables: pull from firewalls, store, look up
 lib/audit.js         security checks on a backup (Security tab)
@@ -416,6 +417,14 @@ backups/             backup files (*.conf) + device metadata (*.meta.json)
 |--------|----------------------------------------------|--------------------------------------|
 | POST   | `/api/login`                                 | Log in: `{ user, password }`; sets the session cookie. Everything else answers `401` without it |
 | POST   | `/api/logout`                                | End the session                      |
+| GET    | `/api/login/info`                            | `{ firstStart }`: whether the temporary login `admin` / `admin` works (no account yet) |
+| POST   | `/api/setup`                                 | Create the first admin: `{ user, password }`. Only from a session of the temporary login |
+| GET    | `/api/me`                                    | The logged-in user and role          |
+| POST   | `/api/me/password`                           | Change your own password: `{ current, password }` |
+| GET    | `/api/users`                                 | List accounts (admin)                |
+| POST   | `/api/users`                                 | Add an account (admin): `{ user, role: "admin"\|"viewer", password }` |
+| PATCH  | `/api/users/:name`                           | Change `role`, `disabled` or `password` of an account (admin) |
+| DELETE | `/api/users/:name`                           | Delete an account (admin)            |
 | GET    | `/api/firewalls`                             | List firewalls (without API keys)    |
 | POST   | `/api/firewalls`                             | Add a firewall                       |
 | DELETE | `/api/firewalls/:id`                         | Remove a firewall                    |
@@ -456,13 +465,26 @@ Sections: `interfaces`, `policies`, `addresses`, `addrgrps`, `services`, `servic
 
 ## Security
 
-- **Login.** Every page and API call needs a session; there is one user and password.
-  - The user is `AUTH_USER` (default `admin`). Set the password with `AUTH_PASSWORD`. If it
-    is unset, a random password is generated on first start and **printed once** in the
-    server output (`docker compose logs app`); only its scrypt hash is kept, in
-    `data/auth.json`. Delete that file and restart to get a new one.
+- **Login.** Every page and API call needs a session. Accounts are managed under **Users**
+  in the web UI and stored in the `users` table (database mode) or `data/users.json` (file
+  mode); nothing about them lives in `.env`.
+  - Passwords need at least 12 characters and are kept only as scrypt hashes.
+  - **Roles.** *Admin* can do everything, including managing accounts. *Read-only* can look
+    at firewalls, backups, inventory and reports, and run the read-only threat feed status
+    check; the server refuses everything else (`403`), the Push tab included.
+  - **First start.** While there is no account, the temporary login `admin` / `admin` works.
+    It can only open `/setup`, which creates your own admin account; right after, the
+    temporary login stops working (it is never stored) and you continue as the new admin.
+    Until then anyone who can reach the port can do the same, so create the account right
+    after starting, or publish the port on `127.0.0.1` only for that moment.
+  - **Upgrading from the single login.** `AUTH_USER` / `AUTH_PASSWORD` and `data/auth.json`
+    are no longer read: after upgrading, log in with the temporary login and create your account.
+  - No one can delete, disable or demote themselves, and the last enabled admin stays an
+    admin. A new password, role or disabled state logs that user out everywhere.
   - Sessions live in memory: they end after 12 hours without activity, on **Log out**, and
-    when the server restarts. Five failed logins from one address lock it out for 15 minutes.
+    when the server restarts. Five failed attempts from one address (logins,
+    current passwords) lock it out for 15 minutes. Failed logins are logged.
+  - Pushes and deletions in `data/push-log.jsonl` record the user who made them.
   - The session cookie is `HttpOnly` and `SameSite=Strict`, and requests from other sites
     are refused. There is no two-factor authentication.
   - The app speaks plain HTTP, so on a network the password travels unencrypted. It listens on

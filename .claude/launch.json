@@ -21,8 +21,6 @@
         "AUTO_BACKUP_HOURS=0",
         "AUTO_ROUTES_HOURS=0",
         "PORT=5556",
-        "AUTH_USER=uitest",
-        "AUTH_PASSWORD=uitest-local-only",
         "node",
         "server.js"
       ],
