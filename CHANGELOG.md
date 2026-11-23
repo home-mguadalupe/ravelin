@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-23 — v0.1.0, first release
+
+- First tagged release. Ravelin is now licensed under the [MIT license](LICENSE).
+- The README explains who Ravelin is for and how it helps, and shows screenshots from a demo
+  with made-up firewalls.
+
 ## 2026-11-22 — Renamed to Ravelin
 
 - The app was called "FortiGate Backup" in the interface, which named only one of its features.
