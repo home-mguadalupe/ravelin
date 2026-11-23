@@ -1,7 +1,27 @@
 {
   "name": "ravelin",
   "version": "0.1.0",
-  "description": "Simple web UI to back up FortiGate configurations via REST API key",
+  "description": "Self-hosted web UI for FortiGate fleets: config backups, searchable inventory, security audit, CVE checks, CIS / PCI DSS compliance and multi-firewall push",
+  "keywords": [
+    "fortigate",
+    "fortinet",
+    "firewall",
+    "network-security",
+    "compliance",
+    "cve",
+    "self-hosted"
+  ],
+  "homepage": "https://github.com/home-mguadalupe/ravelin#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/home-mguadalupe/ravelin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/home-mguadalupe/ravelin/issues"
+  },
+  "author": "Miguel Guadalupe",
+  "license": "MIT",
+  "private": true,
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -9,8 +29,6 @@
   "engines": {
     "node": ">=18"
   },
-  "license": "UNLICENSED",
-  "private": true,
   "dependencies": {
     "pg": "^8.23.1"
   }

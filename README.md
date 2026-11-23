@@ -568,3 +568,8 @@ Sections: `interfaces`, `policies`, `addresses`, `addrgrps`, `services`, `servic
 - The **CVEs** tab is the only feature that contacts the internet: it downloads the public
   FortiOS CVE list from `services.nvd.nist.gov`. The request carries the product name only.
   On a server without internet access the tab reports that the list could not be downloaded.
+
+## License
+
+[MIT](LICENSE). Ravelin is not affiliated with or endorsed by Fortinet. FortiGate and FortiOS
+are trademarks of Fortinet, Inc.
