@@ -3,14 +3,51 @@
 *A ravelin is the outwork built in front of a fort's gate to protect it.* Ravelin is a small
 self-hosted web UI for a fleet of FortiGate firewalls. It is not affiliated with Fortinet.
 
-It backs up FortiGate configurations over the REST API,
-searches inside the backup files, and (optionally) loads them into a PostgreSQL
-inventory of interfaces, firewall policies, address and service objects and groups, IPsec
-tunnels, VIPs, IP pools, SSL-VPN settings and policy routes, with a cross-reference
-of which policies and groups use which objects.
+It backs up FortiGate configurations over the REST API, searches inside the backup files,
+and (optionally) loads them into a PostgreSQL inventory of interfaces, firewall policies,
+address and service objects and groups, IPsec tunnels, VIPs, IP pools, SSL-VPN settings and
+policy routes, with a cross-reference of which policies and groups use which objects. On top
+of the backups it audits the configuration, matches each firewall's FortiOS version against
+known CVEs, maps the results to CIS and PCI DSS, and can push objects, policies and
+administrators to several firewalls at once.
 
 No build step and no framework: plain Node.js, a single HTML page and one
 dependency (`pg`, only used when the inventory database is enabled).
+
+## Why use it
+
+Ravelin is for network and security teams, MSPs and auditors who look after more than a
+handful of FortiGates and have no FortiManager / FortiAnalyzer for this (or don't want to
+open it for everyday questions). It answers the questions that otherwise mean logging into
+each firewall in turn:
+
+| Question | How Ravelin answers it |
+|----------|------------------------|
+| *Do I have a recent backup of every firewall?* | Backups run on a schedule, failures are retried, and the **Overview** flags any firewall not backed up for a week. A known-good config is always at hand after a bad change or a hardware swap. |
+| *Where is this IP, object or setting used?* | Search every config at once, open any object to see where it is used (through nested groups), and use **IP lookup** to see, per firewall, the route an address takes, the objects that contain it, the policies that apply and the threat feeds that list it. |
+| *What can I clean up?* | Objects no policy or group uses are marked `unused`; shadowed policies are listed in **Security**. |
+| *What changed, and does it matter?* | Each backup is compared with the one before it. Changes that matter for security (admins, trusted hosts, management access, VIPs, VPN, HA…) are listed, and those that open management to the internet are marked critical. |
+| *How well hardened are we?* | The **Security** tab checks admin access, crypto, VPN, policies, logging and more, and explains why each finding matters and how to fix it. |
+| *Are we affected by the latest FortiOS CVE?* | The **CVEs** tab lists the CVEs for each firewall's version, checks whether the affected feature is configured and shows the fixed version. CVEs in the CISA list of exploited vulnerabilities are flagged. |
+| *Can I show this to an auditor?* | **Compliance** maps the checks to CIS FortiGate and PCI DSS 4.0.1 controls and prints a PDF report with evidence, remediation and sign-off lines. |
+| *What do I fix first, and how?* | **Mitigation** ranks risky policies across the fleet and gives the checks before, GUI steps, CLI, how to verify and how to roll back. |
+| *I need the same change on 20 firewalls.* | **Push** creates addresses, services, schedules, groups, policies and administrators on many firewalls and VDOMs at once. It always previews first and logs every push with the user who made it. |
+| *Are our threat feeds actually working?* | **Threat feeds** shows which feeds fail to download, are not used by any policy or are fetched insecurely. |
+
+It is also designed to be easy to trust:
+
+- **Self-hosted, data stays with you.** Configs, the inventory and the API keys never leave
+  your server. The only outbound call besides your firewalls is the CVE list download from
+  NVD, which sends only the product name.
+- **Read-only by default.** Most of it works from backups alone. Changing firewalls needs
+  `ENABLE_PUSH=1`, an admin account and a preview of the exact change.
+- **Secrets are protected.** API keys are encrypted at rest and never sent to the browser.
+  Passwords, PSKs and keys are redacted in search results and object views.
+- **Small and easy to run.** One `docker compose up`, or `npm start` without a database for
+  backups, search, audit, CVEs and compliance.
+
+Ravelin does not replace FortiManager: it doesn't manage firmware, policy packages or
+templates, and pushes cover only the object types listed under [Push](#push).
 
 ## Requirements
 
