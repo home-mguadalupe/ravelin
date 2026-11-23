@@ -14,6 +14,8 @@ administrators to several firewalls at once.
 No build step and no framework: plain Node.js, a single HTML page and one
 dependency (`pg`, only used when the inventory database is enabled).
 
+![Overview: what needs attention across the fleet, and one row per firewall](docs/screenshots/overview.png)
+
 ## Why use it
 
 Ravelin is for network and security teams, MSPs and auditors who look after more than a
@@ -48,6 +50,18 @@ It is also designed to be easy to trust:
 
 Ravelin does not replace FortiManager: it doesn't manage firmware, policy packages or
 templates, and pushes cover only the object types listed under [Push](#push).
+
+## Screenshots
+
+The firewalls, addresses and findings below come from a demo with made-up configs.
+
+| | |
+|---|---|
+| **Security audit**: findings per firewall and security-relevant changes ![Security](docs/screenshots/security.png) | **CVEs**: known vulnerabilities for each firewall's FortiOS version ![CVEs](docs/screenshots/cves.png) |
+| **Compliance**: CIS FortiGate and PCI DSS scores per firewall ![Compliance](docs/screenshots/compliance.png) | **Mitigation**: risky policies ranked, with fix steps and rollback ![Mitigation](docs/screenshots/mitigation.png) |
+| **Inventory**: an object's contents and where it is used ![Inventory](docs/screenshots/inventory.png) | **IP lookup**: route, objects and policies for an address on every firewall ![IP lookup](docs/screenshots/ip-lookup.png) |
+| **Config search**: search every backup, with the config path of each match ![Config search](docs/screenshots/config-search.png) | **Threat feeds**: where each feed is used and what looks wrong ![Threat feeds](docs/screenshots/threat-feeds.png) |
+| **Push**: create policies and objects on several firewalls, preview first ![Push](docs/screenshots/push.png) | |
 
 ## Requirements
 
